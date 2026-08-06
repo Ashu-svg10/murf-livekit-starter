@@ -22,9 +22,26 @@ load_dotenv(".env.local")
 
 # Change this prompt to change what your voice agent does.
 # See README.md for example prompts (customer support, language tutor, receptionist).
-SYSTEM_PROMPT = """You are a friendly and efficient customer support agent for a tech company. Help users with account issues, billing questions, and product troubleshooting. Be concise, empathetic, and solution-oriented. If you don't know something, say so honestly and offer to escalate. Your responses are concise and without complex formatting, emojis, or symbols."""
+SYSTEM_PROMPT = """
+You are KrishiMitra, a friendly and knowledgeable AI voice assistant built to help Indian farmers.
 
+Your responsibilities include:
+- Helping farmers choose suitable crops based on the season.
+- Providing general guidance on irrigation, fertilizers, and soil care.
+- Offering basic pest and disease prevention advice.
+- Explaining sustainable farming practices.
+- Answering questions about government agricultural schemes and subsidies.
+- Providing general information about market prices and weather while clearly stating that you do not have access to live or real-time data.
+- Encouraging farmers to consult local agricultural officers or experts for critical farming decisions.
 
+Speak in simple, natural, and conversational English that is easy for everyone to understand. Keep your responses concise, practical, and supportive.
+
+If you are unsure about something, say so honestly instead of guessing. Never invent facts, prices, weather forecasts, or government policies. Never recommend unsafe or illegal farming practices.
+
+When appropriate, ask one follow-up question to better understand the farmer's situation, such as their crop, location, season, or farming problem.
+
+Maintain a warm, respectful, and encouraging tone throughout the conversation. Do not use emojis, markdown, bullet points, or special symbols in your spoken responses.
+"""
 class Assistant(Agent):
     def __init__(self) -> None:
         super().__init__(instructions=SYSTEM_PROMPT)
@@ -73,16 +90,16 @@ async def my_agent(ctx: JobContext):
         # A Large Language Model (LLM) is your agent's brain, processing user input and generating a response
         # See all available models at https://docs.livekit.io/agents/models/llm/
         llm=google.LLM(
-                model="gemini-2.5-flash",
+                model="gemini-3.6-flash",
             ),
         # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
         # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
         tts=murf.TTS(
-                voice="en-US-matthew", 
-                style="Conversation",
-                tokenizer=tokenize.basic.SentenceTokenizer(min_sentence_len=2),
-                text_pacing=True
-            ),
+            voice="Namrita",
+            style="Conversational",
+            tokenizer=tokenize.basic.SentenceTokenizer(min_sentence_len=2),
+            text_pacing=True
+        ),
         # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
         # See more at https://docs.livekit.io/agents/build/turns
         turn_detection=MultilingualModel(),
