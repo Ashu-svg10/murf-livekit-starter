@@ -2,7 +2,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, type MotionProps, motion } from 'motion/react';
-import { useAgent, useSessionContext, useSessionMessages } from '@livekit/components-react';
+import {
+  useAgent,
+  useSessionContext,
+  useSessionMessages,
+} from '@livekit/components-react';
 import { AgentChatTranscript } from '@/components/agents-ui/agent-chat-transcript';
 import {
   AgentControlBar,
@@ -88,7 +92,11 @@ interface FadeProps {
   className?: string;
 }
 
-export function Fade({ top = false, bottom = false, className }: FadeProps) {
+export function Fade({
+  top = false,
+  bottom = false,
+  className,
+}: FadeProps) {
   return (
     <div
       className={cn(
@@ -103,31 +111,35 @@ export function Fade({ top = false, bottom = false, className }: FadeProps) {
 
 export interface AgentSessionView_01Props {
   /**
-   * Message shown above the controls before the first chat message is sent.
+   * Message shown when the agent is ready/listening.
    *
-   * @default 'Agent is listening, ask it a question'
+   * @default 'Listening... Ask me anything about farming.'
    */
   preConnectMessage?: string;
+
   /**
    * Enables or disables the chat toggle and transcript input controls.
    *
    * @default true
    */
   supportsChatInput?: boolean;
+
   /**
    * Enables or disables camera controls in the bottom control bar.
    *
    * @default true
    */
   supportsVideoInput?: boolean;
+
   /**
    * Enables or disables screen sharing controls in the bottom control bar.
    *
    * @default true
    */
   supportsScreenShare?: boolean;
+
   /**
-   * Shows a pre-connect buffer state with a shimmer message before messages appear.
+   * Shows a status message before messages appear.
    *
    * @default true
    */
@@ -135,28 +147,37 @@ export interface AgentSessionView_01Props {
 
   /** Selects the visualizer style rendered in the main tile area. */
   audioVisualizerType?: 'bar' | 'wave' | 'grid' | 'radial' | 'aura';
+
   /** Primary hex color used by supported audio visualizer variants. */
   audioVisualizerColor?: `#${string}`;
+
   /** Hue shift intensity used by certain visualizers. */
   audioVisualizerColorShift?: number;
-  /** Number of bars to render when `audioVisualizerType` is `bar`. */
+
+  /** Number of bars to render when audioVisualizerType is bar. */
   audioVisualizerBarCount?: number;
-  /** Number of rows in the visualizer when `audioVisualizerType` is `grid`. */
+
+  /** Number of rows in the visualizer when audioVisualizerType is grid. */
   audioVisualizerGridRowCount?: number;
-  /** Number of columns in the visualizer when `audioVisualizerType` is `grid`. */
+
+  /** Number of columns in the visualizer when audioVisualizerType is grid. */
   audioVisualizerGridColumnCount?: number;
-  /** Number of radial bars when `audioVisualizerType` is `radial`. */
+
+  /** Number of radial bars when audioVisualizerType is radial. */
   audioVisualizerRadialBarCount?: number;
-  /** Base radius of the radial visualizer when `audioVisualizerType` is `radial`. */
+
+  /** Base radius of the radial visualizer when audioVisualizerType is radial. */
   audioVisualizerRadialRadius?: number;
-  /** Stroke width of the wave path when `audioVisualizerType` is `wave`. */
+
+  /** Stroke width of the wave path when audioVisualizerType is wave. */
   audioVisualizerWaveLineWidth?: number;
-  /** Optional class name merged onto the outer `<section>` container. */
+
+  /** Optional class name merged onto the outer section container. */
   className?: string;
 }
 
 export function AgentSessionView_01({
-  preConnectMessage = 'Agent is listening, ask it a question',
+  preConnectMessage = '🎤 Listening... Ask your farming question.',
   supportsChatInput = true,
   supportsVideoInput = true,
   supportsScreenShare = true,
@@ -178,8 +199,24 @@ export function AgentSessionView_01({
   const session = useSessionContext();
   const { messages } = useSessionMessages(session);
   const [chatOpen, setChatOpen] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const { state: agentState } = useAgent();
+
+  const statusMessage = (() => {
+    switch (agentState) {
+      case 'speaking':
+        return '🌾 KrishiMitra is speaking...';
+
+      case 'thinking':
+        return '🤔 KrishiMitra is thinking...';
+
+      case 'listening':
+        return '🎤 Listening... Ask your farming question.';
+
+      default:
+        return preConnectMessage;
+    }
+  })();
 
   const controls: AgentControlBarControls = {
     leave: true,
@@ -194,19 +231,21 @@ export function AgentSessionView_01({
     const lastMessageIsLocal = lastMessage?.from?.isLocal === true;
 
     if (scrollAreaRef.current && lastMessageIsLocal) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+      scrollAreaRef.current.scrollTop =
+        scrollAreaRef.current.scrollHeight;
     }
   }, [messages]);
 
   return (
     <section
       ref={ref}
-      className={cn('bg-background relative z-10 h-full w-full overflow-hidden', className)}
+      className={cn(
+        'bg-background relative z-10 h-full w-full overflow-hidden',
+        className
+      )}
       {...props}
     >
-      <Fade top className="absolute inset-x-4 top-0 z-10 h-40" />
-      {/* transcript */}
-
+      {/* Transcript */}
       <div className="absolute top-0 bottom-[135px] flex w-full flex-col md:bottom-[170px]">
         <AnimatePresence>
           {chatOpen && (
@@ -223,6 +262,7 @@ export function AgentSessionView_01({
           )}
         </AnimatePresence>
       </div>
+
       {/* Tile layout */}
       <TileLayout
         chatOpen={chatOpen}
@@ -236,29 +276,32 @@ export function AgentSessionView_01({
         audioVisualizerGridColumnCount={audioVisualizerGridColumnCount}
         audioVisualizerWaveLineWidth={audioVisualizerWaveLineWidth}
       />
+
       {/* Bottom */}
       <motion.div
         {...BOTTOM_VIEW_MOTION_PROPS}
         className="absolute inset-x-3 bottom-0 z-50 md:inset-x-12"
       >
-        {/* Pre-connect message */}
+        {/* Agent status */}
         {isPreConnectBufferEnabled && (
-          <AnimatePresence>
-            {messages.length === 0 && (
-              <MotionMessage
-                key="pre-connect-message"
-                duration={2}
-                aria-hidden={messages.length > 0}
-                {...SHIMMER_MOTION_PROPS}
-                className="pointer-events-none mx-auto block w-full max-w-2xl pb-4 text-center text-sm font-semibold"
-              >
-                {preConnectMessage}
-              </MotionMessage>
-            )}
+          <AnimatePresence mode="wait">
+            <MotionMessage
+              key={statusMessage}
+              duration={1.5}
+              {...SHIMMER_MOTION_PROPS}
+              className="pointer-events-none mx-auto block w-full max-w-2xl pb-4 text-center text-sm font-semibold"
+            >
+              {statusMessage}
+            </MotionMessage>
           </AnimatePresence>
         )}
+
         <div className="bg-background relative mx-auto max-w-2xl pb-3 md:pb-12">
-          <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />
+          <Fade
+            bottom
+            className="absolute inset-x-0 top-0 h-4 -translate-y-full"
+          />
+
           <AgentControlBar
             variant="livekit"
             controls={controls}
